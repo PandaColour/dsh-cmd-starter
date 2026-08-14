@@ -1,0 +1,22 @@
+# dsh-cmd-starter — Claude-Code style CLI scheduling, as a bundle patch over
+# the official `@deepseek-ai/dsh-headless` profile.
+#
+# A patch replaces the targeted row's whole `config`, so each overridden row
+# below restates everything it owns. Later layers (the profile's own
+# cordis.patch.yml, $DSH_HOME/cordis.patch.yml, --patch overlays) can re-patch
+# any of these rows.
+
+# ── Override the official headless intake + runner ───────────────────────────
+
+# The official `@deepseek-ai/dsh-headless` bundle inserts two rows:
+#   - id: headless-startup  (parses `[task...]` + `--help`, provides headlessStartup)
+#   - id: headless-runner   (creates a fresh session, runs, prints text, exits)
+#
+# We replace BOTH ids with our own startup and runner. The official bundle's
+# other rows (code-runtime, hmr-off, persona) stay untouched.
+- id: headless-startup
+  name: 'dsh-cmd-starter/startup'
+
+- id: headless-runner
+  name: 'dsh-cmd-starter'
+  inject: [cmdStartup]
