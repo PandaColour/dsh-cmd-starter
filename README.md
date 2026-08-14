@@ -72,3 +72,8 @@ dsh --profile headless --provider deepseek-official --model deepseek-v4-flash --
 ## Python 调度
 
 见 [`examples/schedule.py`](examples/schedule.py)。
+
+## 感谢支持
+
+![谢谢支持](weixin.jpg)
+联系方式: <panda.colour@qq.com>
