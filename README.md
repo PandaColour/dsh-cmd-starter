@@ -9,6 +9,12 @@ Claude-Code 风格的 DeepSeek Harness 无头调度 bundle。它在官方 `@deep
 - `--output-format json`：stdout 输出单行 JSON，含 `sessionId`
 - `--provider / --model / --max-tokens / --effort`：覆盖本次运行的模型参数
 
+## 为什么做这个
+
+这个插件是为了支持 [panda-pipline](https://github.com/PandaColour/panda-pipline) 而开发的。`panda-pipline` 是一个用 Python 直接驱动 Claude / Codex / Cursor 这类编码 agent，把它们编排成流水线干活的框架。
+
+`dsh-cmd-starter` 的角色，是让 **DeepSeek Harness** 也能被同一套 Python 流水线驱动——通过补齐 Claude-Code 风格的 `--resume` / `--continue` / `--name` / `--append-prompt` / `--output-format json` 调度参数，使 `dsh` 在 Python 眼里和 `claude` / `codex` / `cursor` 一样，是一个「可以用 `subprocess.Popen` 启动、带结构化输出、能按会话恢复」的可编排单元。
+
 ## 安装
 
 要求：Node `^22.19 || >=24`，已全局安装 `dsh`（`npm i -g @deepseek-ai/dsh@next`）。
