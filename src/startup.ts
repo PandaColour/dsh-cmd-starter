@@ -32,6 +32,8 @@ export interface CmdStartupValues {
   resumeSessionId?: string
   /** Resume the most recently created session (ignored when `resumeSessionId` is set). */
   continueLatest: boolean
+  /** Name this session under a durable alias (later: `--resume <name>`). */
+  name?: string
   /** Output shape: plain text or a single JSON object on stdout. */
   outputFormat: 'text' | 'json'
   /** Override the provider route for this run. */
@@ -54,8 +56,9 @@ function cmdCommand(): Command {
     .helpOption('-h, --help', 'show this help')
     .argument('[task...]', 'the task text; multiple words are joined by spaces')
     .option('--append-prompt <text>', 'append extra system-prompt text for THIS run only (repeatable)', collect)
-    .option('--resume <sessionId>', 'resume an existing session instead of creating a new one')
+    .option('--resume <sessionId>', 'resume an existing session by id or by a --name alias')
     .option('-c, --continue', 'resume the most recently created session')
+    .option('--name <name>', 'name this session under a durable alias (later: --resume <name>)')
     .option('--output-format <format>', 'stdout shape: text (default) or json', /^(text|json)$/, 'text')
     .option('--provider <name>', 'override the provider route for this run')
     .option('--model <name>', 'override the model id for this run')
@@ -70,6 +73,7 @@ Examples:
   dsh --profile headless "run the tests"                      answer one task and exit
   dsh --profile headless --append-prompt "be terse" "task"    append a per-run system-prompt note
   dsh --profile headless --resume <id> "continue"             resume a persisted session
+  dsh --profile headless --name review --output-format json "review this"   name it, then --resume review
   dsh --profile headless -c "continue"                        resume the latest session
   dsh --profile headless --output-format json "task"          emit JSON incl. sessionId
 `)
@@ -85,6 +89,7 @@ export function apply(ctx: Context): void {
       appendPrompt?: string[]
       resume?: string
       continue?: boolean
+      name?: string
       outputFormat: 'text' | 'json'
       provider?: string
       model?: string
@@ -99,6 +104,7 @@ export function apply(ctx: Context): void {
       appendPrompts: opts.appendPrompt ?? [],
       resumeSessionId: opts.resume,
       continueLatest: opts.continue === true,
+      name: opts.name,
       outputFormat: opts.outputFormat,
       provider: opts.provider,
       model: opts.model,

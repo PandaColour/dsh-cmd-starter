@@ -3,8 +3,9 @@
 Claude-Code 风格的 DeepSeek Harness 无头调度 bundle。它在官方 `@deepseek-ai/dsh-headless` profile 之上，把一次性任务入口升级成可脚本化的 CLI：
 
 - `--append-prompt <text>`：本次运行临时追加系统提示词（可重复；不落盘、不进会话历史）
-- `--resume <session-id>`：恢复已有会话
+- `--resume <session-id>`：恢复已有会话（支持 id 或 `--name` 别名）
 - `-c, --continue`：续最近的会话
+- `--name <name>`：给会话起持久化别名，之后 `--resume <name>` 恢复
 - `--output-format json`：stdout 输出单行 JSON，含 `sessionId`
 - `--provider / --model / --max-tokens / --effort`：覆盖本次运行的模型参数
 
@@ -36,6 +37,10 @@ dsh --profile headless --output-format json "run the tests"
 dsh --profile headless --resume session-xxx "continue"
 dsh --profile headless -c "continue"
 
+# 命名会话，之后按名字恢复
+dsh --profile headless --name review "review this PR"
+dsh --profile headless --resume review "continue the review"
+
 # 覆盖模型参数
 dsh --profile headless --provider deepseek-official --model deepseek-v4-flash --max-tokens 8192 "task"
 ```
@@ -45,8 +50,9 @@ dsh --profile headless --provider deepseek-official --model deepseek-v4-flash --
 | Claude CLI | dsh-cmd-starter |
 |---|---|
 | `claude -p "prompt"` | `dsh --profile headless "prompt"` |
-| `claude -r <name>` | `dsh --profile headless --resume <session-id>` |
+| `claude -r <name>` | `dsh --profile headless --resume <session-id-or-name>` |
 | `claude -c` | `dsh --profile headless -c "..."` |
+| `claude -n, --name <name>` | `dsh --profile headless --name <name> "..."` |
 | `claude --append-system-prompt <t>` | `dsh --profile headless --append-prompt <t>` |
 | `claude --output-format json` | `dsh --profile headless --output-format json` |
 | `claude --model <m>` | `dsh --profile headless --provider <p> --model <m>` |
@@ -54,7 +60,8 @@ dsh --profile headless --provider deepseek-official --model deepseek-v4-flash --
 ## 语义说明
 
 - **`--append-prompt` 是临时的**：通过 agent 作用域的 `systemPrompt.section()` 注入，进程退出即消失，绝不写入 session 日志。连续两次运行互不残留；只有 `--resume`/`-c` 才会延续对话历史。
-- **`--output-format json` 的字段**（命名对齐 SDK 协议）：`sessionId`（驼峰）、`finalResponse`、`finishReason`（`completed | max-tokens | blocked | aborted | error`）、`errorCode`（仅 error 时）。
+- **`--name` 的别名是持久的**：存在 `$DSH_HOME/cmd-starter/aliases.json`（原子写），跨进程有效。`--resume <value>` 先查别名表，命中就映射到 session id，未命中就把 `<value>` 当 session id。别名只指向 session，不进入会话历史。
+- **`--output-format json` 的字段**（命名对齐 SDK 协议）：`sessionId`（驼峰）、`name`（仅 `--name` 时）、`finalResponse`、`finishReason`（`completed | max-tokens | blocked | aborted | error`）、`errorCode`（仅 error 时）。
 
 ## Python 调度
 

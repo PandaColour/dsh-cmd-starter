@@ -23,6 +23,7 @@ import type {} from '@deepseek-ai/dsh-cmdline'
 import type {} from '@deepseek-ai/dsh-session-query'
 import type { CmdStartupValues } from './startup.js'
 import { CMD_STARTUP_SERVICE } from './startup.js'
+import { resolveAlias, writeAlias } from './aliases.js'
 
 /** Stable Cordis plugin name. */
 export const name = 'cmd-runner'
@@ -79,12 +80,12 @@ function fail(io: HeadlessIo, error: unknown): void {
   io.exit(1)
 }
 
-/** Resolve the session identity: exact resume > latest continue > fresh create. */
+/** Resolve the session identity: exact resume (id or alias) > latest continue > fresh create. */
 async function resolveResumeSessionId(
   ctx: Context,
   startup: CmdStartupValues,
 ): Promise<SessionId | undefined> {
-  if (startup.resumeSessionId !== undefined) return SessionId(startup.resumeSessionId)
+  if (startup.resumeSessionId !== undefined) return SessionId(resolveAlias(startup.resumeSessionId))
   if (!startup.continueLatest) return undefined
   const sessionQuery = ctx.get('sessionQuery')
   if (sessionQuery === undefined) {
@@ -159,9 +160,16 @@ async function run(ctx: Context, startup: CmdStartupValues, io: HeadlessIo): Pro
   await sessions.flush(agent.session)
   const outcome = summarize(agent.session.events, firstSeq)
 
+  // Name the session under its durable alias before any output, so a JSON
+  // consumer sees a sessionId that a later `--resume <name>` resolves.
+  if (startup.name !== undefined) {
+    writeAlias(startup.name, String(agent.session.id))
+  }
+
   if (startup.outputFormat === 'json') {
     io.stdout.write(JSON.stringify({
       sessionId: String(agent.session.id),
+      ...startup.name !== undefined ? { name: startup.name } : {},
       finalResponse: outcome.text,
       finishReason: outcome.reason?.kind ?? null,
       ...outcome.reason?.kind === 'error' ? { errorCode: outcome.reason.error.code } : {},

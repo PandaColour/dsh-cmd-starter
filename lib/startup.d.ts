@@ -25,6 +25,8 @@ export interface CmdStartupValues {
     resumeSessionId?: string;
     /** Resume the most recently created session (ignored when `resumeSessionId` is set). */
     continueLatest: boolean;
+    /** Name this session under a durable alias (later: `--resume <name>`). */
+    name?: string;
     /** Output shape: plain text or a single JSON object on stdout. */
     outputFormat: 'text' | 'json';
     /** Override the provider route for this run. */

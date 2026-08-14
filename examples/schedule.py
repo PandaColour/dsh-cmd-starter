@@ -22,6 +22,7 @@ class Dsh:
         append_prompt: Optional[list[str]] = None,
         resume: Optional[str] = None,
         continue_latest: bool = False,
+        name: Optional[str] = None,
         cwd: Optional[str] = None,
         model: Optional[str] = None,
         provider: Optional[str] = None,
@@ -34,6 +35,8 @@ class Dsh:
             args += ["--resume", resume]
         if continue_latest:
             args += ["--continue"]
+        if name is not None:
+            args += ["--name", name]
         if provider is not None:
             args += ["--provider", provider]
         if model is not None:
@@ -71,3 +74,9 @@ if __name__ == "__main__":
     # 3. 或直接续最近的会话（-c）
     r3 = d.run("再压缩到 3 条要点", continue_latest=True)
     print("continued:", r3["finishReason"])
+
+    # 4. 命名会话，之后按名字恢复（不记 session id）
+    r4 = d.run("审查这个 PR", name="pr-review")
+    print("named sessionId:", r4["sessionId"], "name:", r4.get("name"))
+    r5 = d.run("继续审查，重点看并发安全", resume="pr-review")
+    print("resumed by name:", r5["sessionId"])
